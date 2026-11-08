@@ -1,0 +1,10 @@
+{
+  "name": "proposal",
+  "description": "Turn an AI's plan into a one-page visual proposal: decisions with a recommendation, plan steps, diagrams and risks, answered right on the page.",
+  "version": "1.0.0",
+  "author": { "name": "diegorezm", "url": "https://github.com/diegorezm" },
+  "homepage": "https://github.com/diegorezm/proposal-skill",
+  "repository": "https://github.com/diegorezm/proposal-skill",
+  "license": "MIT",
+  "keywords": ["skill", "proposal", "planning", "review", "decisions", "diagram", "html"]
+}

@@ -1,0 +1,93 @@
+{
+  "title": "Move sign-in to OAuth",
+  "summary": "Replace email + password with \"Sign in with Google / GitHub\", keep existing accounts, and delete the password reset flow.",
+  "project": "acme-web",
+  "date": "2026-11-08",
+  "author": "Claude",
+  "lang": "en",
+  "facts": [
+    { "value": "9", "label": "files changed" },
+    { "value": "~1 day", "label": "estimated work" },
+    { "value": "0", "label": "new dependencies" },
+    { "value": "2", "label": "decisions for you" }
+  ],
+  "tldr": {
+    "what": "Add OAuth sign-in, link it to existing accounts by verified email, then remove passwords.",
+    "why": "34% of support tickets are password resets, and we store password hashes we don't need.",
+    "ask": "Pick the providers and what happens to accounts whose email doesn't match."
+  },
+  "decisions": [
+    {
+      "id": "providers",
+      "question": "Which providers should we offer?",
+      "context": "Each one needs an app registration and a few lines of config.",
+      "multi": true,
+      "options": [
+        { "id": "google", "label": "Google", "detail": "Most of our users have a Gmail address.", "pros": ["Covers ~70% of accounts"], "cons": ["Needs a consent screen review"], "recommended": true },
+        { "id": "github", "label": "GitHub", "detail": "Popular with our developer users.", "pros": ["Instant approval"], "cons": ["Fewer non-developer users"], "recommended": true },
+        { "id": "apple", "label": "Apple", "detail": "Required only if we ship an iOS app.", "cons": ["US$ 99/year developer account"] }
+      ],
+      "why": "Google and GitHub cover almost everyone and cost nothing."
+    },
+    {
+      "id": "unmatched",
+      "question": "What if an OAuth email doesn't match any account?",
+      "options": [
+        { "id": "create", "label": "Create a new account", "detail": "Simple; some people may end up with two accounts.", "recommended": true },
+        { "id": "link", "label": "Ask them to link manually", "detail": "One extra screen; no duplicates.", "pros": ["No duplicate accounts"], "cons": ["More support questions"] }
+      ],
+      "why": "Duplicates can be merged later from the admin page; blocking sign-in loses people."
+    }
+  ],
+  "plan": [
+    { "title": "Register the OAuth apps", "detail": "Google Cloud and GitHub developer settings; secrets go in the vault.", "effort": "S", "risk": "low" },
+    { "title": "Add the OAuth callback", "detail": "One route that exchanges the code, verifies the email and finds or creates the account.", "effort": "M", "risk": "medium", "files": ["src/auth/oauth.ts", "src/routes/callback.ts"] },
+    { "title": "New sign-in screen", "detail": "Two buttons, the old form behind a \"Use password\" link for two weeks.", "effort": "S", "risk": "low", "files": ["src/pages/login.tsx"] },
+    { "title": "Remove passwords", "detail": "After two weeks: drop the form, the reset flow and the password_hash column.", "effort": "M", "risk": "high", "files": ["src/auth/password.ts", "migrations/0042_drop_password.sql"] },
+    { "title": "Tell users", "detail": "Banner on the sign-in page and one email before passwords go away.", "effort": "S", "risk": "low" }
+  ],
+  "diagrams": [
+    {
+      "type": "flow",
+      "title": "Sign-in after the change",
+      "caption": "New parts in blue, changed in amber, removed dashed.",
+      "nodes": [
+        { "id": "login", "label": "Sign-in page", "note": "two provider buttons", "tone": "changed" },
+        { "id": "provider", "label": "Google / GitHub", "note": "consent screen" },
+        { "id": "callback", "label": "OAuth callback", "note": "verify email", "tone": "new" },
+        { "id": "accounts", "label": "Accounts", "note": "find or create" },
+        { "id": "reset", "label": "Password reset", "tone": "removed" },
+        { "id": "session", "label": "Session", "note": "unchanged" }
+      ],
+      "edges": [
+        ["login", "provider"],
+        ["provider", "callback", "code"],
+        ["callback", "accounts"],
+        ["accounts", "session"],
+        ["login", "reset"]
+      ]
+    },
+    {
+      "type": "compare",
+      "title": "What the user sees",
+      "before": ["Email + password form", "\"Forgot password\" email", "Password rules"],
+      "after": [
+        { "text": "\"Continue with Google\" button", "tone": "new" },
+        { "text": "\"Continue with GitHub\" button", "tone": "new" },
+        { "text": "Password form, hidden behind a link for 2 weeks", "tone": "changed" },
+        { "text": "Password rules", "tone": "removed" }
+      ]
+    }
+  ],
+  "risks": [
+    { "level": "high", "text": "Users who signed up with an email they no longer own get locked out.", "mitigation": "Keep the password link for two weeks and email everyone first." },
+    { "level": "medium", "text": "Google's consent screen review can take a few days.", "mitigation": "Start step 1 today; GitHub works without review." },
+    { "level": "low", "text": "Two accounts for the same person.", "mitigation": "Merge tool in the admin page (already exists)." }
+  ],
+  "outOfScope": ["Two-factor authentication", "Enterprise SSO (SAML)", "Mobile app sign-in"],
+  "questions": ["Do we have numbers on how many accounts use non-Gmail addresses?", "Who owns the Google Cloud project?"],
+  "links": [
+    { "label": "Support tickets report", "url": "https://example.com/report" },
+    { "label": "OAuth 2.0 spec", "url": "https://oauth.net/2/" }
+  ]
+}
