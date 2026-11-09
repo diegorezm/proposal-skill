@@ -101,12 +101,14 @@ The AI will also reach for it before big or risky changes where it needs several
 What happens next:
 
 1. The AI looks into your code, docs or data first.
-2. It writes the proposal and opens the page in your browser (or publishes it as an Artifact, when
-   your Claude app supports that) and tells you, in one or two lines, what it needs from you.
+2. It writes the proposal, opens the page in your browser and tells you, in one or two lines, what it
+   needs from you. Nothing is published anywhere unless you ask for it (for example, as an Artifact).
 3. You answer on the page and paste the copied answers back.
 4. The AI gets to work, or shows you a revised proposal if your answers changed a lot.
 
-Pages are saved in your system's temp folder, not in your project. Your clicks are remembered in your
+Pages are saved in `.claude/proposals/` at your project's root (or `~/.claude/proposals/` outside a
+project), so you can open them again later. Add `.claude/proposals/` to your `.gitignore` if you don't
+want them committed. Your clicks are remembered in your
 browser until you press **Clear**.
 
 ## Make it yours

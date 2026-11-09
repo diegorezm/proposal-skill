@@ -4,7 +4,9 @@
     python render.py proposal.json [out.html] [--open]
     cat proposal.json | python render.py - out.html
 
-Without `out.html`, writes `<system temp>/proposals/<date>-<slug>.html`. Prints the output path.
+Without `out.html`, writes `<project>/.claude/proposals/<date>-<slug>.html`, where <project> is the
+nearest folder (from the current one up) with a `.git` or `.claude` folder; outside a project,
+`~/.claude/proposals/`. Prints the output path.
 Standard library only (Python 3.8+).
 """
 import datetime
@@ -12,7 +14,6 @@ import html
 import json
 import re
 import sys
-import tempfile
 import webbrowser
 from pathlib import Path
 
@@ -51,6 +52,15 @@ def slug(text):
     return s[:48] or "proposal"
 
 
+def proposals_dir():
+    cwd = Path.cwd()
+    for folder in [cwd, *cwd.parents]:
+        if (folder / ".git").exists() or (folder / ".claude").is_dir():
+            if folder != Path.home():
+                return folder / ".claude" / "proposals"
+    return Path.home() / ".claude" / "proposals"
+
+
 def main(argv):
     args = [a for a in argv if a != "--open"]
     if not args:
@@ -68,7 +78,7 @@ def main(argv):
     if len(args) > 1:
         out = Path(args[1])
     else:
-        out = Path(tempfile.gettempdir()) / "proposals" / f"{data['date']}-{slug(data['title'])}.html"
+        out = proposals_dir() / f"{data['date']}-{slug(data['title'])}.html"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     page = TEMPLATE.read_text(encoding="utf-8")

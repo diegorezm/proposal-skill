@@ -65,18 +65,17 @@ One JSON object. Only `title` is required; everything else is optional and hidde
 Write the JSON to a temporary file, then run the renderer from this skill's folder:
 
 ```sh
-python3 <skill folder>/render.py proposal.json            # writes <temp>/proposals/<date>-<slug>.html
+python3 <skill folder>/render.py proposal.json --open     # writes .claude/proposals/<date>-<slug>.html
 python3 <skill folder>/render.py proposal.json out.html   # or choose the path
 ```
 
 Use `python` instead of `python3` where that's the command. It prints the output path, and it refuses invalid data with a list of problems; fix them and run it again. If Python isn't available, copy `template.html` and replace `/*PROPOSAL_TITLE*/` with the HTML-escaped title and `/*PROPOSAL_DATA*/` with the JSON (with every `</` written as `<\/`).
 
-Don't save proposals inside the user's repository unless they ask.
+Run it from the user's project folder: by default it saves to `.claude/proposals/` at the project root (or `~/.claude/proposals/` outside a project). If the project is a git repository and `.claude/proposals/` isn't ignored, mention once that they may want to add it to `.gitignore`; don't edit `.gitignore` yourself unless they ask.
 
 ## 4. Show it
 
-- If you have a tool that publishes or previews HTML pages for the user (for example an Artifact tool), publish the rendered file with it and give them the link.
-- Otherwise open it: add `--open` to the render command (it opens the default browser), and also give the file path.
+Open it in the browser with `--open` and give the file path. Don't publish it anywhere (no Artifact, no upload, no preview tool) unless the user explicitly asks for that.
 
 Then write a short chat message: one line on what you're proposing, the decisions you need (numbered, with your recommendation), and that they can answer in the page and paste the copied answers back — or just reply in chat. Don't repeat the whole proposal in the chat.
 
